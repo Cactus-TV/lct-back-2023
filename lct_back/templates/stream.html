@@ -8,6 +8,12 @@
 
 <body>
     <h1>Test</h1>
+    <button id="btn">Показать</button>
+    <img src="{% url 'frame' %}" id="img" style="display:none;">
+    <script>
+        document.getElementById("btn").addEventListener("click", function(){
+        document.getElementById("img").style.display = "block";});
+    </script>
     <img src="{% url 'transmition' %}">
 </body>
 
