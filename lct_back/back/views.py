@@ -16,16 +16,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 # добавить поддержку нескольких камер одновременно
-# MQ_POST_ARR = [i+'_post' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
-# MQ_GET_ARR = [i+'_get' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
-MQ_POST_ARR = ['test_rtsp_get_1', 'test_rtsp_get_2']
-MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
+MQ_POST_ARR = [i+'_post' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
+MQ_GET_ARR = [i+'_get' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
+# MQ_POST_ARR = ['test_rtsp_get_1', 'test_rtsp_get_2']
+# MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
 
-# MQ_LOGIN = os.getenv('RABBITMQ_LOGIN')
-# MQ_PASSWORD = os.getenv('RABBITMQ_PASSSWORD')
-# MQ_IP = os.getenv('RABBITMQ_IP')
-# MQ_PORT = os.getenv('RABBITMQ_PORT')
-# MQ_HOST = os.getenv('RABBITMQ_HOST')
+MQ_LOGIN = os.getenv('RABBITMQ_LOGIN')
+MQ_PASSWORD = os.getenv('RABBITMQ_PASSSWORD')
+MQ_IP = os.getenv('RABBITMQ_IP')
+MQ_PORT = os.getenv('RABBITMQ_PORT')
+MQ_HOST = os.getenv('RABBITMQ_HOST')
 
 @gzip.gzip_page
 def transmition(request):
@@ -47,10 +47,10 @@ def frame(request):
 #to capture video class
 class VideoCamera(object):
     def __init__(self):
-        credentials = pika.PlainCredentials('test_user', 'test')
-        parameters = pika.ConnectionParameters('localhost', 5672, 'test_host', credentials)
-        # credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
-        # parameters = pika.ConnectionParameters(MQ_HOST, MQ_PORT, MQ_HOST, credentials)
+        # credentials = pika.PlainCredentials('test_user', 'test')
+        # parameters = pika.ConnectionParameters('localhost', 5672, 'test_host', credentials)
+        credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
+        parameters = pika.ConnectionParameters(MQ_IP, MQ_PORT, MQ_HOST, credentials)
 
         self.connection_get_arr = list()
         self.connection_post_arr = list()
