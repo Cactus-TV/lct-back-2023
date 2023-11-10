@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 import os
 
-MEDIA_PATH = os.getenv('MEDIA_PATH')
+MEDIA_PATH = os.environ.get('MEDIA_PATH')
 
 class Stream(models.Model): #стрим
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)

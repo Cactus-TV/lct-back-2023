@@ -16,16 +16,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 # добавить поддержку нескольких камер одновременно
-MQ_POST_ARR = [i+'_post' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
-MQ_GET_ARR = [i+'_get' for i in os.getenv('RABBITMQ_QUEUE_NAME').split("|")]
+MQ_POST_ARR = [i+'_post' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
+MQ_GET_ARR = [i+'_get' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
 # MQ_POST_ARR = ['test_rtsp_get_1', 'test_rtsp_get_2']
 # MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
 
-MQ_LOGIN = os.getenv('RABBITMQ_LOGIN')
-MQ_PASSWORD = os.getenv('RABBITMQ_PASSSWORD')
-MQ_IP = os.getenv('RABBITMQ_IP')
-MQ_PORT = os.getenv('RABBITMQ_PORT')
-MQ_HOST = os.getenv('RABBITMQ_HOST')
+MQ_LOGIN = os.environ.get('RABBITMQ_LOGIN')
+MQ_PASSWORD = os.environ.get('RABBITMQ_PASSSWORD')
+MQ_IP = os.environ.get('RABBITMQ_IP')
+MQ_PORT = os.environ.get('RABBITMQ_PORT')
+MQ_HOST = os.environ.get('RABBITMQ_HOST')
 
 @gzip.gzip_page
 def transmition(request):
