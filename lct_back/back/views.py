@@ -16,10 +16,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 # добавить поддержку нескольких камер одновременно
-MQ_POST_ARR = [i+'_post' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
-MQ_GET_ARR = [i+'_get' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
+# MQ_POST_ARR = [i+'_post' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
+# MQ_GET_ARR = [i+'_get' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
 # MQ_POST_ARR = ['test_rtsp_get_1', 'test_rtsp_get_2']
 # MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
+MQ_POST_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_POST').split("|")
+MQ_GET_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_GET').split("|")
 
 MQ_LOGIN = os.environ.get('RABBITMQ_LOGIN')
 MQ_PASSWORD = os.environ.get('RABBITMQ_PASSSWORD')

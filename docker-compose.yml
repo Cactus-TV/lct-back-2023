@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   web:
-    # Берем Dockerfile из каталога app
+    # Берем Dockerfile из каталога
     build: ./lct_back
     # Запускаем тестовый сервер
     command: python manage.py runserver 0.0.0.0:8000
-    # куда будут помещены данные из каталога app
+    # куда будут помещены данные из каталога
     volumes:
       - ./lct_back/:/usr/src/lct_back/
     # Открываем порт 8000 внутри и снаружи

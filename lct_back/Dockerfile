@@ -1,5 +1,5 @@
 # образ на основе которого создаём контейнер
-FROM python:3.10-alpine
+FROM python:3.10
 
 # рабочая директория внутри проекта
 WORKDIR /usr/src/lct_back
@@ -9,8 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # устанавливаем зависимости
-RUN apt-get -y install libc-dev
-RUN \apt-get -y install build-essential
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
