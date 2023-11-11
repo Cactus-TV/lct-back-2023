@@ -22,12 +22,13 @@ from rest_framework.response import Response
 # MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
 MQ_POST_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_POST').split("|")
 MQ_GET_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_GET').split("|")
-
 MQ_LOGIN = os.environ.get('RABBITMQ_LOGIN')
 MQ_PASSWORD = os.environ.get('RABBITMQ_PASSSWORD')
 MQ_IP = os.environ.get('RABBITMQ_IP')
 MQ_PORT = os.environ.get('RABBITMQ_PORT')
 MQ_HOST = os.environ.get('RABBITMQ_HOST')
+
+is_changed = False
 
 @gzip.gzip_page
 def transmition(request):
@@ -41,7 +42,15 @@ def transmition(request):
 def frame(request):
     try:
         cam = VideoCamera()
-        return HttpResponse(gen_one(cam), content_type="multipart/x-mixed-replace;boundary=frame")
+        return HttpResponse(get_one(cam), content_type="multipart/x-mixed-replace;boundary=frame")
+    except:
+        pass
+    return render(request, 'stream.html')
+
+def frame_detected(request):
+    try:
+        cam = VideoCamera()
+        return HttpResponse(get_one_detected(cam), content_type="multipart/x-mixed-replace;boundary=frame")
     except:
         pass
     return render(request, 'stream.html')
@@ -49,6 +58,7 @@ def frame(request):
 #to capture video class
 class VideoCamera(object):
     def __init__(self):
+        self.video = None
         # credentials = pika.PlainCredentials('test_user', 'test')
         # parameters = pika.ConnectionParameters('localhost', 5672, 'test_host', credentials)
         credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
@@ -60,6 +70,9 @@ class VideoCamera(object):
         self.channel_get_arr = list()
 
         self.last_frame_number = 0
+
+        global is_changed
+        is_changed = False
 
         for i in MQ_GET_ARR:
             self.connection_get_arr.append(pika.BlockingConnection(parameters))
@@ -73,16 +86,7 @@ class VideoCamera(object):
         # self.channel_post.queue_declare(queue='test_rtsp_frames', durable=True)
         # self.channel_get.queue_declare(queue='test_ai_detected_frames', durable=True)
 
-        cameras_arr = list(Stream.objects.filter(Q(is_active=True)))
-        if len(cameras_arr):
-            camera = list(Stream.objects.filter(Q(is_active=True)))[0]
-        else:
-            camera = list(Stream.objects.all())[0]
-        login = camera.username
-        password = camera.password
-        url = camera.url
-
-        self.video = cv2.VideoCapture(f'rtsp://{login}:{password}{url}')
+        self.init_camera()
         # self.video = cv2.VideoCapture('rtsp://admin:A1234567@188.170.176.190:8027/Streaming/Channels/101?transportmode=unicast&profile=Profile_1')
         self.grabbed, self.frame = self.video.read()
         self.frame_2 = self.frame
@@ -116,6 +120,19 @@ class VideoCamera(object):
             return jpeg.tobytes()
         else:
             return 0
+        
+    def init_camera(self):
+        cameras_arr = list(Stream.objects.filter(Q(is_active=True)))
+        if len(cameras_arr):
+            camera = list(Stream.objects.filter(Q(is_active=True)))[0]
+        else:
+            camera = list(Stream.objects.all())[0]
+        login = camera.username
+        password = camera.password
+        url = camera.url
+
+        self.video = cv2.VideoCapture(f'rtsp://{login}:{password}{url}')
+        
     
     def callback(self, ch, method, properties, body):
         if int(ch) - 1 >= self.last_frame_number:
@@ -131,26 +148,6 @@ class VideoCamera(object):
     
     def post_queue(self, queue_name, chanel, img_str):
         chanel.basic_publish(exchange='', routing_key=queue_name, body=img_str)
-
-    # def connect(self):
-    #     credentials = pika.PlainCredentials('test_user', 'test')
-    #     parameters = pika.ConnectionParameters('localhost', 5672, 'test_host', credentials)
-    #     # credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
-    #     # parameters = pika.ConnectionParameters(MQ_HOST, MQ_PORT, MQ_HOST, credentials)
-
-    #     self.connection_get = pika.BlockingConnection(parameters)
-    #     self.connection_post = pika.BlockingConnection(parameters)
-    #     self.channel_post = self.connection_post.channel()
-    #     self.channel_get = self.connection_get.channel()
-
-    #     for i in MQ_GET_ARR:
-    #         self.channel_get.queue_declare(queue=i, durable=True)
-    #     for i in MQ_POST_ARR:
-    #         self.channel_post.queue_declare(queue=i, durable=True)
-
-    #     for i in range(len(MQ_GET_ARR)):
-    #         threading.Thread(target=self.get_queue, kwargs = {'frame_num': str(i), 'queue_name': MQ_GET_ARR[i]}).start()
-    #     # threading.Thread(target=self.get_queue, args=('test_ai_detected_frames')).start()
 
     def update(self):
         i = 0
@@ -180,11 +177,22 @@ class VideoCamera(object):
 def gen(camera):
     while True:
         frame = camera.get_frame()
+        global is_changed
+        if is_changed:
+            camera.init_camera()
+            is_changed = False
+
         if frame:
             yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
             
-def gen_one(camera):
+def get_one(camera):
+    frame = camera.get_frame_unmodified()
+    if frame:
+        return (b'--frame\r\n'
+            b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+    
+def get_one_detected(camera):
     frame = camera.get_frame()
     if frame:
         return (b'--frame\r\n'
@@ -241,6 +249,7 @@ class StreamUpdateIsActiveAPI(APIView):
                 i.is_active=False
                 i.save()
             streams[0].is_active = True
+            is_changed = True
             streams[0].save()
 
             return Response(status.HTTP_200_OK)
