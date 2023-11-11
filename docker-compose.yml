@@ -12,7 +12,16 @@ services:
     # Открываем порт 8000 внутри и снаружи
     ports:
       - 8000:8000
-
     # Файл содержащий переменные для контейнера
     env_file:
       - ./.env
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    environment:
+      - RABBITMQ_DEFAULT_USER=test_user
+      - RABBITMQ_DEFAULT_PASS=test
+    ports:
+        - 5672:5672
+        - 15672:15672
