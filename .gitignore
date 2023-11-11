@@ -1,0 +1,5 @@
+lct_back/env/
+lct_back/lct_back/__pycache__/
+lct_back/lct_back/migrations/
+lct_back/back/__pycache__/
+lct_back/back/migrations/
