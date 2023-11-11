@@ -121,7 +121,7 @@ class VideoCamera(object):
         password = camera.password
         url = camera.url
 
-        self.video = cv2.VideoCapture(f'rtsp://{login}:{password}{url}')
+        self.video = cv2.VideoCapture(f'rtsp://{login}:{password}{url}', cv2.CAP_ANY)
         
     
     def callback(self, ch, method, properties, body):
@@ -142,22 +142,22 @@ class VideoCamera(object):
         j = 0
         while True:
             self.grabbed, self.frame = self.video.read()
-            self.frame_2 = self.frame
-            i += 1
-            if i % (25//len(MQ_POST_ARR)) == 0:
-                if j == len(MQ_POST_ARR):
-                    self.last_frame_number = 0
-                    i = 0
-                    j = 0
-                    continue
+            if self.grabbed:
+                self.frame_2 = self.frame
+                i += 1
+                if i % (25//len(MQ_POST_ARR)) == 0:
+                    if j == len(MQ_POST_ARR):
+                        self.last_frame_number = 0
+                        i = 0
+                        j = 0
+                        continue
 
-                if self.grabbed:
                     img_str = cv2.imencode('.jpg', self.frame)[1].tobytes()
                     threading.Thread(target=self.post_queue, kwargs={'queue_name': MQ_POST_ARR[j], 'chanel': self.channel_post_arr[j], 'img_str': img_str}).start()
-                j += 1
+                    j += 1
 
-            if self.grabbed and self.frame.shape == self.ai_frame.shape:
-                self.frame = cv2.addWeighted(self.frame, 1, self.ai_frame, 1, 0.0)
+                if self.frame.shape == self.ai_frame.shape:
+                    self.frame = cv2.addWeighted(self.frame, 1, self.ai_frame, 1, 0.0)
 
 def gen(camera):
     while True:
