@@ -21,7 +21,6 @@ MQ_POST_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_POST').split("|")
 MQ_GET_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_GET').split("|")
 MQ_LOGIN = os.environ.get('RABBITMQ_LOGIN')
 MQ_PASSWORD = os.environ.get('RABBITMQ_PASSSWORD')
-MQ_IP = os.environ.get('RABBITMQ_IP')
 MQ_PORT = os.environ.get('RABBITMQ_PORT')
 MQ_HOST = os.environ.get('RABBITMQ_HOST')
 
@@ -56,7 +55,7 @@ class VideoCamera(object):
     def __init__(self):
         self.video = None
         credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
-        parameters = pika.ConnectionParameters(MQ_IP, MQ_PORT, MQ_HOST, credentials)
+        parameters = pika.ConnectionParameters(port=MQ_PORT, host=MQ_HOST, credentials=credentials)
 
         self.connection_get_arr = list()
         self.connection_post_arr = list()
