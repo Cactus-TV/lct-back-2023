@@ -14,12 +14,9 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from dotenv import load_dotenv
 
-# добавить поддержку нескольких камер одновременно
-# MQ_POST_ARR = [i+'_post' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
-# MQ_GET_ARR = [i+'_get' for i in os.environ.get('RABBITMQ_QUEUE_NAME').split("|")]
-# MQ_POST_ARR = ['test_rtsp_get_1', 'test_rtsp_get_2']
-# MQ_GET_ARR = ['test_rtsp_post_1', 'test_rtsp_post_2']
+load_dotenv()
 MQ_POST_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_POST').split("|")
 MQ_GET_ARR = os.environ.get('RABBITMQ_QUEUE_NAME_GET').split("|")
 MQ_LOGIN = os.environ.get('RABBITMQ_LOGIN')
@@ -55,12 +52,9 @@ def frame_detected(request):
         pass
     return render(request, 'stream.html')
 
-#to capture video class
 class VideoCamera(object):
     def __init__(self):
         self.video = None
-        # credentials = pika.PlainCredentials('test_user', 'test')
-        # parameters = pika.ConnectionParameters('localhost', 5672, 'test_host', credentials)
         credentials = pika.PlainCredentials(MQ_LOGIN, MQ_PASSWORD)
         parameters = pika.ConnectionParameters(MQ_IP, MQ_PORT, MQ_HOST, credentials)
 
@@ -83,11 +77,8 @@ class VideoCamera(object):
             self.channel_post_arr.append(self.connection_post_arr[-1].channel())
             self.channel_post_arr[-1].queue_declare(queue=i, durable=True)
 
-        # self.channel_post.queue_declare(queue='test_rtsp_frames', durable=True)
-        # self.channel_get.queue_declare(queue='test_ai_detected_frames', durable=True)
 
         self.init_camera()
-        # self.video = cv2.VideoCapture('rtsp://admin:A1234567@188.170.176.190:8027/Streaming/Channels/101?transportmode=unicast&profile=Profile_1')
         self.grabbed, self.frame = self.video.read()
         self.frame_2 = self.frame
         h, w ,ch = self.frame.shape
@@ -136,8 +127,6 @@ class VideoCamera(object):
     
     def callback(self, ch, method, properties, body):
         if int(ch) - 1 >= self.last_frame_number:
-            # for i in range(0,int(ch)-1):
-            #     self.channel_get.queue_purge(MQ_GET_ARR[i])
             nparr = np.frombuffer(body, np.uint8)
             self.ai_frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             self.last_frame_number = int(ch) - 1
@@ -159,8 +148,6 @@ class VideoCamera(object):
             if i % (25//len(MQ_POST_ARR)) == 0:
                 if j == len(MQ_POST_ARR):
                     self.last_frame_number = 0
-                    # for name in MQ_POST_ARR:
-                    #     self.channel_post.queue_purge(name)
                     i = 0
                     j = 0
                     continue
@@ -168,10 +155,9 @@ class VideoCamera(object):
                 if self.grabbed:
                     img_str = cv2.imencode('.jpg', self.frame)[1].tobytes()
                     threading.Thread(target=self.post_queue, kwargs={'queue_name': MQ_POST_ARR[j], 'chanel': self.channel_post_arr[j], 'img_str': img_str}).start()
-                    # self.channel_post.basic_publish(exchange='', routing_key='test_rtsp_frames', body=img_str)
                 j += 1
 
-            if self.grabbed:
+            if self.grabbed and self.frame.shape == self.ai_frame.shape:
                 self.frame = cv2.addWeighted(self.frame, 1, self.ai_frame, 1, 0.0)
 
 def gen(camera):
@@ -249,6 +235,7 @@ class StreamUpdateIsActiveAPI(APIView):
                 i.is_active=False
                 i.save()
             streams[0].is_active = True
+            global is_changed
             is_changed = True
             streams[0].save()
 

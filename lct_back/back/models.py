@@ -1,10 +1,12 @@
 from django.db import models
 import uuid
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 MEDIA_PATH = os.environ.get('MEDIA_PATH')
 
-class Stream(models.Model): #стрим
+class Stream(models.Model):
     uid = models.UUIDField(default=uuid.uuid4, primary_key=True)
     stream_name = models.CharField(max_length=128, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
