@@ -1,4 +1,4 @@
-env/
-media/
-__pycache__/
+lct_back/env/
+lct_back/back/media/
+lct_back/back/__pycache__/
 *.py[cod]
